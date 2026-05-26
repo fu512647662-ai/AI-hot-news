@@ -1,0 +1,52 @@
+name: AI HOT Daily Digest
+
+on:
+  schedule:
+    # 00:30 UTC = 08:30 Asia/Shanghai.
+    - cron: "30 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    env:
+      AIHOT_MODE: ${{ vars.AIHOT_MODE || 'selected24h' }}
+      AIHOT_TAKE: ${{ vars.AIHOT_TAKE || '50' }}
+      AIHOT_HOURS: ${{ vars.AIHOT_HOURS || '24' }}
+      AIHOT_CREATE_GITHUB_ISSUE: ${{ vars.AIHOT_CREATE_GITHUB_ISSUE || 'true' }}
+      AIHOT_WEBHOOK_URL: ${{ secrets.AIHOT_WEBHOOK_URL }}
+      AIHOT_WEBHOOK_TYPE: ${{ secrets.AIHOT_WEBHOOK_TYPE }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate digest
+        run: |
+          python scripts/aihot_digest.py \
+            --mode "$AIHOT_MODE" \
+            --hours "$AIHOT_HOURS" \
+            --take "$AIHOT_TAKE" \
+            --output digest.md
+
+      - name: Upload digest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aihot-digest
+          path: digest.md
+
+      - name: Publish GitHub issue
+        run: python scripts/publish_github_issue.py digest.md
+
+      - name: Push webhook
+        run: python scripts/push_webhook.py digest.md
