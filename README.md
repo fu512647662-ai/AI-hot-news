@@ -47,6 +47,7 @@ python scripts/aihot_digest.py --mode selected24h --hours 24 --take 50 --output 
 
 - `AIHOT_WEBHOOK_URL`：webhook 地址。
 - `AIHOT_WEBHOOK_TYPE`：`generic`、`dingtalk` 或 `serverchan`，默认 `generic`。
+- `AIHOT_DINGTALK_SECRET`：钉钉机器人加签密钥。仅 `AIHOT_WEBHOOK_TYPE=dingtalk` 且机器人开启加签时需要。
 
 `generic` 会发送：
 
@@ -58,6 +59,6 @@ python scripts/aihot_digest.py --mode selected24h --hours 24 --take 50 --output 
 ```
 
 `dingtalk` 会按钉钉机器人 Markdown 消息格式发送。
+如果配置了 `AIHOT_DINGTALK_SECRET`，脚本会自动按钉钉要求生成 `timestamp` 和 `sign`。
 
 `serverchan` 会按 Server 酱 `title` / `desp` 表单格式发送。
-

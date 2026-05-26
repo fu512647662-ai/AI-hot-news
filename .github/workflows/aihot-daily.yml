@@ -20,6 +20,7 @@ jobs:
       AIHOT_CREATE_GITHUB_ISSUE: ${{ vars.AIHOT_CREATE_GITHUB_ISSUE || 'true' }}
       AIHOT_WEBHOOK_URL: ${{ secrets.AIHOT_WEBHOOK_URL }}
       AIHOT_WEBHOOK_TYPE: ${{ secrets.AIHOT_WEBHOOK_TYPE }}
+      AIHOT_DINGTALK_SECRET: ${{ secrets.AIHOT_DINGTALK_SECRET }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
