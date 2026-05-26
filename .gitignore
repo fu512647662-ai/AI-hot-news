@@ -1,4 +1,5 @@
 digest.md
 daily.md
+.secrets/
 __pycache__/
 *.pyc
