@@ -15,7 +15,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 
-def post_json(url: str, payload: dict) -> None:
+def post_json(url: str, payload: dict) -> dict:
     request = urllib.request.Request(
         url,
         data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
@@ -23,7 +23,14 @@ def post_json(url: str, payload: dict) -> None:
         headers={"Content-Type": "application/json; charset=utf-8", "User-Agent": "aihot-daily-digest"},
     )
     with urllib.request.urlopen(request, timeout=30) as response:
+        body = response.read().decode("utf-8", errors="replace")
         print(f"Webhook sent: {response.status}")
+        if not body:
+            return {}
+        try:
+            return json.loads(body)
+        except json.JSONDecodeError:
+            return {"raw": body}
 
 
 def post_form(url: str, payload: dict) -> None:
@@ -52,8 +59,7 @@ def with_dingtalk_sign(url: str, secret: str | None) -> str:
 def main() -> int:
     url = os.getenv("AIHOT_WEBHOOK_URL")
     if not url:
-        print("AIHOT_WEBHOOK_URL is not set; skipping webhook.")
-        return 0
+        raise RuntimeError("AIHOT_WEBHOOK_URL is not set; webhook was not sent.")
 
     digest_path = Path(sys.argv[1] if len(sys.argv) > 1 else "digest.md")
     content = digest_path.read_text(encoding="utf-8")
@@ -63,7 +69,10 @@ def main() -> int:
 
     if webhook_type == "dingtalk":
         url = with_dingtalk_sign(url, os.getenv("AIHOT_DINGTALK_SECRET"))
-        post_json(url, {"msgtype": "markdown", "markdown": {"title": title, "text": content}})
+        result = post_json(url, {"msgtype": "markdown", "markdown": {"title": title, "text": content}})
+        if result.get("errcode") != 0:
+            errmsg = result.get("errmsg") or result.get("raw") or result
+            raise RuntimeError(f"DingTalk webhook failed: {errmsg}")
     elif webhook_type == "serverchan":
         post_form(url, {"title": title, "desp": content})
     else:
