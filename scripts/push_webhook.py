@@ -65,7 +65,11 @@ def main() -> int:
     content = digest_path.read_text(encoding="utf-8")
     today = datetime.now(ZoneInfo("Asia/Shanghai")).strftime("%Y-%m-%d")
     title = os.getenv("AIHOT_WEBHOOK_TITLE") or f"AI HOT · {today}"
-    webhook_type = (os.getenv("AIHOT_WEBHOOK_TYPE") or "generic").strip().lower()
+    webhook_type = (os.getenv("AIHOT_WEBHOOK_TYPE") or "").strip().lower()
+    if not webhook_type and "oapi.dingtalk.com/robot/send" in url:
+        webhook_type = "dingtalk"
+    if not webhook_type:
+        webhook_type = "generic"
 
     if webhook_type == "dingtalk":
         url = with_dingtalk_sign(url, os.getenv("AIHOT_DINGTALK_SECRET"))
@@ -73,10 +77,14 @@ def main() -> int:
         if result.get("errcode") != 0:
             errmsg = result.get("errmsg") or result.get("raw") or result
             raise RuntimeError(f"DingTalk webhook failed: {errmsg}")
+        print("DingTalk webhook delivered.")
     elif webhook_type == "serverchan":
         post_form(url, {"title": title, "desp": content})
     else:
-        post_json(url, {"title": title, "content": content})
+        result = post_json(url, {"title": title, "content": content})
+        if "errcode" in result and result.get("errcode") != 0:
+            errmsg = result.get("errmsg") or result.get("raw") or result
+            raise RuntimeError(f"Webhook failed: {errmsg}")
     return 0
 
 
