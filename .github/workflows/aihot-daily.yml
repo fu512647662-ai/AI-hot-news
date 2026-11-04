@@ -32,6 +32,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Test digest
+        run: python -m unittest discover -s tests -v
+
       - name: Generate digest
         run: |
           python scripts/aihot_digest.py \
