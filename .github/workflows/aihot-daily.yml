@@ -1,10 +1,6 @@
 name: AI HOT Daily Digest
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/aihot-daily.yml"
   schedule:
     # 00:30 UTC = 08:30 Asia/Shanghai.
     - cron: "30 0 * * *"
